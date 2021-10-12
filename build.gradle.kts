@@ -23,6 +23,21 @@ license {
 }
 
 publishing {
+    repositories {
+        maven {
+            val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            url = if (project.version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
+
+            val ossrhUsername = findProperty("ossrh.user") ?: return@maven
+            val ossrhPassword = findProperty("ossrh.password") ?: return@maven
+            credentials {
+                username = ossrhUsername as String
+                password = ossrhPassword as String
+            }
+        }
+    }
+
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
