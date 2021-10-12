@@ -33,11 +33,13 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -55,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.util.Collections.synchronizedSet;
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
 /**
@@ -62,11 +65,6 @@ import static javax.tools.StandardLocation.CLASS_OUTPUT;
  */
 @SupportedAnnotationTypes("io.github.emilyydev.asp.Provides")
 public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
-
-  @SuppressWarnings("unchecked")
-  private static <X extends Throwable> void sneakyThrow(final Throwable exception) throws X {
-    throw (X) exception;
-  }
 
   private final Map<String, Set<String>> serviceProvidersMap = new ConcurrentHashMap<>();
 
@@ -86,9 +84,26 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
         }
 
         final TypeElement provider = (TypeElement) element;
+        final String providerSimpleName = provider.getSimpleName().toString();
+        final String providerName = elementUtils.getBinaryName(provider).toString();
+
         // error if the annotated type is not public
         if (!provider.getModifiers().contains(Modifier.PUBLIC)) {
-          final String errorMessage = String.format("Annotated provider '%s' is not a public type", provider);
+          final String errorMessage = String.format(
+              "Annotated provider '%s' is not a public type",
+              providerSimpleName
+          );
+          messager.printMessage(Diagnostic.Kind.ERROR, errorMessage, element);
+          throw new Error(errorMessage);
+        }
+
+        // error if the annotated type is an inner class (non-static "nested" class)
+        final Element enclosingElement = provider.getEnclosingElement();
+        if (enclosingElement.getKind().isClass() && !provider.getModifiers().contains(Modifier.STATIC)) {
+          final String errorMessage = String.format(
+              "Annotated provider '%s' must not be an inner class",
+              providerSimpleName
+          );
           messager.printMessage(Diagnostic.Kind.ERROR, errorMessage, element);
           throw new Error(errorMessage);
         }
@@ -101,17 +116,19 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
             .mapToInt(List::size)
             .anyMatch(i -> i == 0);
 
+        // TODO: not error? Since Java 9+ a provider can have a `public static T provider()` function
+        //  (where T is the service type)
         // error if the annotated type does not have a default/no-args constructor
         if (!hasDefaultConstructor) {
           final String errorMessage = String.format(
-              "Annotated provider '%s' does not contain a default/no-args constructor",
-              provider
+              "Annotated provider '%s' is an invalid provider type%n"
+              + "It does not contain a public default/no-args constructor",
+              providerSimpleName
           );
           messager.printMessage(Diagnostic.Kind.ERROR, errorMessage, element);
           throw new Error(errorMessage);
         }
 
-        final String providerName = elementUtils.getBinaryName((TypeElement) element).toString();
         element.getAnnotationMirrors().stream()
             .filter(mirror -> typeUtils.isSameType(mirror.getAnnotationType(), annotationTypeMirror))
             .map(AnnotationMirror::getElementValues)
@@ -121,9 +138,10 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
             .map(o -> (List<? extends AnnotationValue>) o)
             .flatMap(List::stream)
             .map(AnnotationValue::getValue)
+            .map(TypeMirror.class::cast)
             .filter(maybeService -> {
-              // ignore array and primitive types
-              if (!(maybeService instanceof DeclaredType)) {
+              // ignore array, void and primitive types (in reality just anything that's not a class/interface)
+              if (maybeService.getKind() != TypeKind.DECLARED) {
                 messager.printMessage(
                     Diagnostic.Kind.WARNING,
                     String.format(
@@ -141,30 +159,33 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
             .map(DeclaredType::asElement)
             .map(TypeElement.class::cast)
             .filter(service -> {
+              // TODO: not error? Since Java 9+ a provider can not extend the service type if there is a provider method
               // error if any of the listed types is not a supertype of the annotated type
               if (typeUtils.isAssignable(provider.asType(), service.asType())) {
                 return true;
               }
               final String errorMessage = String.format(
                   "Annotated provider '%s' is not assignable from service '%s'",
-                  provider, service
+                  providerSimpleName, service.getSimpleName()
               );
               messager.printMessage(Diagnostic.Kind.ERROR, errorMessage, element);
               throw new Error(errorMessage);
             })
             .map(elementUtils::getBinaryName)
             .map(Object::toString)
-            .forEach(serviceName -> this.serviceProvidersMap.computeIfAbsent(serviceName, s -> new HashSet<>())
-                .add(providerName));
+            .forEach(serviceName -> this.serviceProvidersMap.computeIfAbsent(
+                serviceName, s -> synchronizedSet(new HashSet<>())
+            ).add(providerName));
       });
     });
 
     for (final Map.Entry<String, Set<String>> entry : this.serviceProvidersMap.entrySet()) {
       final String service = entry.getKey();
+      final String serviceFile = "META-INF/services/" + service;
       final Set<String> providers = entry.getValue();
 
       try {
-        final FileObject resource = filer.createResource(CLASS_OUTPUT, "", "META-INF/services/" + service);
+        final FileObject resource = filer.createResource(CLASS_OUTPUT, "", serviceFile);
         try (
             final OutputStream stream = resource.openOutputStream();
             final OutputStreamWriter streamWriter = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
@@ -178,7 +199,7 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
       } catch (final FilerException exception) {
         // ignore, file already exists (?)
       } catch (final IOException exception) {
-        sneakyThrow(exception);
+        throw new RuntimeException("An error occurred while trying to write to '" + serviceFile + "'", exception);
       }
     }
 

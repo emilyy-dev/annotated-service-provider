@@ -39,8 +39,8 @@ import java.lang.annotation.Target;
  * </p>
  *
  * <p>
- * Types that are not valid service types (array and primitive types) are ignored by the annotation
- * processor, yielding a warning.
+ * Types that are not valid service types (array, void and primitive types) are ignored by the annotation processor,
+ * yielding a warning.
  * </p>
  *
  * <p>
