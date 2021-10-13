@@ -24,10 +24,8 @@
 
 package io.github.emilyydev.asp.processor;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
 import io.github.emilyydev.asp.Provides;
+import org.jetbrains.annotations.ApiStatus;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -54,6 +52,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,13 +65,19 @@ import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
 /**
  * Annotation processor for the {@link Provides} annotation.
+ *
+ * <p>
+ * <b>This class is not API and will be moved to a different module in a future version.</b>
+ * </p>
  */
+@ApiStatus.Internal
 public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
 
-  private static final Set<String> SUPPORTED_ANNOTATIONS = ImmutableSet.of(Provides.class.getName());
-  private static final Set<String> SUPPORTED_OPTIONS = ImmutableSet.of();
+  private static final String PROVIDES_ANNOTATION_NAME = Provides.class.getCanonicalName();
+  private static final Set<String> SUPPORTED_ANNOTATIONS = Collections.singleton(PROVIDES_ANNOTATION_NAME);
+  private static final Set<String> SUPPORTED_OPTIONS = Collections.emptySet();
 
-  private final Multimap<String, String> serviceProvidersMap = HashMultimap.create();
+  private final Map<String, Set<String>> serviceProvidersMap = new HashMap<>();
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
@@ -96,6 +103,10 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
     }
 
     return true;
+  }
+
+  private Set<String> getProvidersFor(final String service) {
+    return this.serviceProvidersMap.computeIfAbsent(service, s -> new HashSet<>());
   }
 
   private void processAnnotations(final RoundEnvironment roundEnv) {
@@ -188,7 +199,7 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
             messager.printMessage(Diagnostic.Kind.ERROR, errorMessage, element);
             return Optional.<String>empty();
           })
-          .peek(opt -> opt.ifPresent(serviceName -> this.serviceProvidersMap.put(serviceName, providerName)))
+          .peek(opt -> opt.ifPresent(serviceName -> getProvidersFor(serviceName).add(providerName)))
           .allMatch(Optional::isPresent);
 
       if (!allEntriesProcessed) {
@@ -201,7 +212,7 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
   private Stream<? extends TypeMirror> getAnnotationServices(final Element element) {
     final Elements elementUtils = this.processingEnv.getElementUtils();
     final Types typeUtils = this.processingEnv.getTypeUtils();
-    final TypeMirror annotationType = elementUtils.getTypeElement(Provides.class.getCanonicalName()).asType();
+    final TypeMirror annotationType = elementUtils.getTypeElement(PROVIDES_ANNOTATION_NAME).asType();
 
     return element.getAnnotationMirrors().stream()
         .filter(mirror -> typeUtils.isSameType(mirror.getAnnotationType(), annotationType))
@@ -221,10 +232,10 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
     final Messager messager = this.processingEnv.getMessager();
     final Filer filer = this.processingEnv.getFiler();
 
-    for (final Map.Entry<String, Collection<String>> entry : this.serviceProvidersMap.asMap().entrySet()) {
+    for (final Map.Entry<String, Set<String>> entry : this.serviceProvidersMap.entrySet()) {
       final String service = entry.getKey();
       final String serviceFile = "META-INF/services/" + service;
-      final Collection<String> providers = entry.getValue();
+      final Set<String> providers = entry.getValue();
 
       try {
         final FileObject resource = filer.createResource(CLASS_OUTPUT, "", serviceFile);

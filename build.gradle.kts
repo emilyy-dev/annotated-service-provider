@@ -1,5 +1,5 @@
 plugins {
-    java
+    `java-library`
     signing
     `maven-publish`
     id("com.github.hierynomus.license-base") version "0.16.1"
@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.guava", "guava", "31.0.1-jre")
+    api("org.jetbrains", "annotations", "22.0.0")
 }
 
 license {
