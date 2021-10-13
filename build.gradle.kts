@@ -69,7 +69,7 @@ publishing {
                 scm {
                     connection.set("scm:git:git://github.com/emilyy-dev/annotated-service-provider.git")
                     developerConnection.set("scm:git:ssh://github.com:emilyy-dev/annotated-service-provider.git")
-                    url.set("http://github.com/emilyy-dev/annotated-service-provider/tree/main")
+                    url.set("https://github.com/emilyy-dev/annotated-service-provider/tree/main")
                 }
             }
         }
