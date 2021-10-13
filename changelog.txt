@@ -1,3 +1,11 @@
+v1.0.2 2021-10-13
+* https scm url
+* DO NOT throw exceptions/errors
+* Overall refactoring (SRP / function segregation)
+* Write service files *after* processing the annotations
+* Gradle friendly! Mark processor as aggregating to allow for incremental building
+* Add note to readme about `kapt` for usage with Kotlin
+
 v1.0.1 2021-10-12
 * Don't sneaky-throw, rethrow IOExceptions as a RuntimeException
 * Use a synchronized set for the map values

@@ -7,7 +7,7 @@ plugins {
 
 project.group = "io.github.emilyy-dev"
 project.version = "1.0.2"
-val snapshot: Boolean = true
+val snapshot: Boolean = false
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
