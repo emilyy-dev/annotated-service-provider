@@ -1,0 +1,6 @@
+v1.0.1 2021-10-12
+* Don't sneaky-throw, rethrow IOExceptions as a RuntimeException
+* Use a synchronized set for the map values
+* Use type 'simple names' where possible
+* Fix: disallow inner classes
+* Update javadoc
