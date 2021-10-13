@@ -6,13 +6,22 @@ plugins {
 }
 
 project.group = "io.github.emilyy-dev"
-project.version = "1.0.1"
+project.version = "1.0.2"
+val snapshot: Boolean = true
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
     withJavadocJar()
     withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.google.guava", "guava", "31.0.1-jre")
 }
 
 license {
@@ -27,7 +36,7 @@ publishing {
         maven {
             val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
             val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            url = if (project.version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
+            url = if (snapshot) snapshotsUrl else releasesUrl
 
             val ossrhUsername = findProperty("ossrh.user") ?: return@maven
             val ossrhPassword = findProperty("ossrh.password") ?: return@maven
@@ -44,7 +53,7 @@ publishing {
 
             groupId = project.group.toString()
             artifactId = project.name
-            version = project.version.toString()
+            version = project.version.toString() + if (snapshot) "-SNAPSHOT" else ""
 
             pom {
                 packaging = "jar"
