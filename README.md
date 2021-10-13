@@ -32,10 +32,6 @@ current version released is shown at the top of this readme. Snapshot builds can
 Importing ASP to your project:
 * Using Gradle
 ```groovy
-plugins {
-    id("java")
-}
-
 repositories {
     mavenCentral()
 }
@@ -45,6 +41,9 @@ dependencies {
     annotationProcessor("io.github.emilyy-dev:annotated-service-provider:{version}")
 }
 ```
+> Note: if your project uses Kotlin you need to use [**`kapt`**](https://kotlinlang.org/docs/kapt.html) to use
+> annotation processors instead.
+
 * Using Maven
 ```xml
 <project>
