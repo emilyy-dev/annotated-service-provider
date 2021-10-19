@@ -24,7 +24,7 @@
 
 package io.github.emilyydev.asp.processor;
 
-import io.github.emilyydev.asp.Provides;
+import io.github.emilyydev.asp.ProvidesService;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -63,11 +63,11 @@ import java.util.stream.Stream;
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
 /**
- * Annotation processor for the {@link Provides} annotation.
+ * Annotation processor for the {@link ProvidesService} annotation.
  */
 public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
 
-  private static final String PROVIDES_ANNOTATION_NAME = Provides.class.getCanonicalName();
+  private static final String PROVIDES_ANNOTATION_NAME = ProvidesService.class.getCanonicalName();
   private static final Set<String> SUPPORTED_ANNOTATIONS = Collections.singleton(PROVIDES_ANNOTATION_NAME);
   private static final Set<String> SUPPORTED_OPTIONS = Collections.emptySet();
 
@@ -108,7 +108,7 @@ public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
     final Elements elementUtils = this.processingEnv.getElementUtils();
     final Types typeUtils = this.processingEnv.getTypeUtils();
 
-    for (final Element element : roundEnv.getElementsAnnotatedWith(Provides.class)) {
+    for (final Element element : roundEnv.getElementsAnnotatedWith(ProvidesService.class)) {
       final ElementKind elementKind = element.getKind();
       if (!elementKind.isClass() && !elementKind.isInterface()) {
         continue;

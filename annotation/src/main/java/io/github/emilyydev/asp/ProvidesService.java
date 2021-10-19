@@ -51,7 +51,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface Provides {
+public @interface ProvidesService {
 
   /**
    * An array of classes and/or interfaces the class annotated with this interface provides.
