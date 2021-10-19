@@ -5,16 +5,16 @@
 [![License](https://img.shields.io/github/license/emilyy-dev/annotated-service-provider?color=blue)](https://github.com/emilyy-dev/annotated-service-provider/blob/main/LICENSE.txt)
 
 This annotation processor will add to the class-path services deployment (`META-INF/services/`) provider types that are
-annotated with the `@Provides` annotation.
+annotated with the `@ProvidesService` annotation.
 
 ### Example usage
 ```java
 package io.github.emilyydev.asp.demo;
 
-import io.github.emilyydev.asp.Provides;
+import io.github.emilyydev.asp.ProvidesService;
 import java.sql.Driver;
 
-@Provides(Driver.class)
+@ProvidesService(Driver.class)
 public class SqlDriverImpl implements Driver {
   // implementation...
 }
@@ -25,8 +25,10 @@ provider type to the corresponding service file `META-INF/services/java.sql.Driv
 jar file provides multiple providers for the same service.
 
 ### Adding it to your project
-ASP is released on Maven Central under the coordinates `io.github.emilyy-dev:annotated-service-provider:{version}`. The
-current version released is shown at the top of this readme. Snapshot builds can be found in OSS sonatype
+ASP is released on Maven Central under two different artifacts:
+* The annotation artifact: `io.github.emilyy-dev:annotated-service-provider:{version}`.
+* The annotation processor artifact: `io.github.emilyy-dev:annotated-service-provider-processor:{version}`.
+The current version released is shown at the top of this readme. Snapshot builds can be found in OSS sonatype
 (https://s01.oss.sonatype.org/content/repositories/snapshots/)
 
 Importing ASP to your project:
@@ -37,8 +39,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.github.emilyy-dev:annotated-service-provider:{version}")
-    annotationProcessor("io.github.emilyy-dev:annotated-service-provider:{version}")
+    implementation("io.github.emilyy-dev:annotated-service-provider:{version}")
+    annotationProcessor("io.github.emilyy-dev:annotated-service-provider-processor:{version}")
 }
 ```
 > Note: if your project uses Kotlin you need to use [**`kapt`**](https://kotlinlang.org/docs/kapt.html) to use
@@ -59,7 +61,7 @@ dependencies {
                         <annotationProcessorPaths>
                             <path>
                                 <groupId>io.github.emilyy-dev</groupId>
-                                <artifactId>annotated-service-provider</artifactId>
+                                <artifactId>annotated-service-provider-processor</artifactId>
                                 <version>{version}</version>
                             </path>
                         </annotationProcessorPaths>
