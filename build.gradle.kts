@@ -13,9 +13,9 @@ subprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "com.github.hierynomus.license-base")
 
-    project.group = "io.github.emilyy-dev"
-    project.version = "2.0.0"
     val snapshot = true
+    project.group = "io.github.emilyy-dev"
+    project.version = "2.0.0" + if (snapshot) "-SNAPSHOT" else ""
 
     java {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -53,7 +53,7 @@ subprojects {
 
                 groupId = project.group.toString()
                 artifactId = project.name
-                version = project.version.toString() + if (snapshot) "-SNAPSHOT" else ""
+                version = project.version.toString()
 
                 pom {
                     packaging = "jar"
