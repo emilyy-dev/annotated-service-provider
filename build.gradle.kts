@@ -1,3 +1,5 @@
+import java.util.jar.Attributes
+
 plugins {
     java
     signing
@@ -97,6 +99,7 @@ subprojects {
         }
 
         withType<Jar> {
+            manifest.attributes[Attributes.Name.SEALED.toString()] = true
             manifestContentCharset = Charsets.UTF_8.name()
             metaInf {
                 from(license.header) { into("${project.group}/${project.name}") }
