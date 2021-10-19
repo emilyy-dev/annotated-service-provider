@@ -25,7 +25,6 @@
 package io.github.emilyydev.asp.processor;
 
 import io.github.emilyydev.asp.Provides;
-import org.jetbrains.annotations.ApiStatus;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -65,12 +64,7 @@ import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
 /**
  * Annotation processor for the {@link Provides} annotation.
- *
- * <p>
- * <b>This class is not API and will be moved to a different module in a future version.</b>
- * </p>
  */
-@ApiStatus.Internal
 public final class AnnotatedServiceProviderProcessor extends AbstractProcessor {
 
   private static final String PROVIDES_ANNOTATION_NAME = Provides.class.getCanonicalName();
