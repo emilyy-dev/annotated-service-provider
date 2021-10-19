@@ -13,7 +13,7 @@ subprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "com.github.hierynomus.license-base")
 
-    val snapshot = true
+    val snapshot = false
     project.group = "io.github.emilyy-dev"
     project.version = "2.0.0" + if (snapshot) "-SNAPSHOT" else ""
 

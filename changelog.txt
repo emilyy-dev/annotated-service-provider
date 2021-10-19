@@ -1,3 +1,10 @@
+v2.0.0 2021-10-18
+* Split annotation and processor into different modules
+* Sealed jar files
+* Fix project version stuff
+* Rename `Provides` to `ProvidesService` to avoid simple class name clash with Dagger's `Provides` annotation
+* Update readme
+
 v1.0.2 2021-10-13
 * https scm url
 * DO NOT throw exceptions/errors
